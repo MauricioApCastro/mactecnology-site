@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="description" content="Fractal - organize projetos, tarefas, notas e ideias em um formato visual de fractais, com anexos.">
+  <meta name="theme-color" content="#0B1020">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fractal">
+  <link rel="manifest" href="manifest.json?v=21">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <title>Fractal - Planejador Visual</title>
+  <link rel="stylesheet" href="css/styles.css?v=21">
+  <!-- Portão: no mactecnology.com.br o app só abre para contas que já
+       usaram o Fractal no Android (js/portao.js). Fecha antes do primeiro
+       desenho para a lista não piscar. ?portao força o portão (testes). -->
+  <script>
+    if (/(^|\.)mactecnology\.com\.br$/.test(location.hostname) || /[?&]portao(=|&|$)/.test(location.search)) {
+      document.documentElement.dataset.portao = 'fechado';
+    }
+  </script>
+</head>
+<body>
+
+  <!-- ============ PORTÃO (só no mactecnology.com.br) ============ -->
+  <section id="portao" class="portao" aria-live="polite">
+    <div class="portao-caixa">
+      <div class="brand-fractal portao-logo"></div>
+      <h1 class="portao-titulo">Fractal no computador</h1>
+      <p class="conta-texto">
+        A versão web do Fractal é para quem já usa o app no Android.
+        Entre com a mesma conta Google do app para ver seus projetos aqui.
+      </p>
+      <div id="portao-entrar">
+        <div id="portao-google" class="conta-google"></div>
+      </div>
+      <p id="portao-verificando" class="portao-verificando" hidden></p>
+      <p id="portao-mensagem" class="conta-mensagem"></p>
+      <div id="portao-negado" hidden>
+        <div class="conta-botoes">
+          <a class="btn btn-primario" id="portao-play" href="#" target="_blank" rel="noopener">Baixar no Google Play</a>
+          <button class="btn btn-secundario" id="portao-outra">Usar outra conta</button>
+        </div>
+      </div>
+      <p class="portao-rodape">
+        <a href="../">Mactecnology</a> · <a href="privacidade.html">Política de Privacidade</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Aviso no endereço antigo (mauricioapcastro.github.io/fractal-web). -->
+  <div id="aviso-endereco" class="aviso-endereco" hidden>
+    <span>O Fractal agora fica em <a href="#" target="_blank" rel="noopener"></a> (para quem usa o app Android).</span>
+    <button class="btn-icon" id="aviso-endereco-fechar" aria-label="Fechar aviso">&#215;</button>
+  </div>
+
+  <!-- ============ TELA: LISTA DE PROJETOS ============ -->
+  <section id="tela-lista" class="tela ativa">
+    <header class="topbar-lista">
+      <div class="brand">
+        <div class="brand-fractal"></div>
+        <div>
+          <h1>Fractal</h1>
+          <p>Planejamento e ideias em fractais</p>
+        </div>
+      </div>
+      <div class="acoes-lista">
+        <button class="btn btn-secundario" id="btn-conta">Conta</button>
+        <button class="btn btn-secundario" id="btn-importar">Importar</button>
+        <button class="btn btn-primario" id="btn-novo-projeto">Novo projeto</button>
+      </div>
+    </header>
+
+    <div id="lista-container" class="lista-container">
+      <div id="lista-vazia" class="vazio">
+        <div class="vazio-fractal"></div>
+        <p class="vazio-titulo">Nenhum projeto ainda.</p>
+        <p class="vazio-sub">Toque em "Novo projeto" para começar.</p>
+      </div>
+    </div>
+
+    <div id="rodape-lista" class="rodape-lista">
+      <button class="btn btn-texto" id="btn-exportar-tudo">Exportar todos (backup)</button>
+      <span class="sep-rodape">•</span>
+      <button class="btn btn-texto" id="btn-som">Som: ligado</button>
+      <span class="sep-rodape">•</span>
+      <span class="versao" id="conta-resumo">Conta: local</span>
+      <span class="sep-rodape">•</span>
+      <button class="btn btn-texto" id="btn-ajuda">Como usar</button>
+      <span class="sep-rodape">•</span>
+      <a class="btn btn-texto" href="privacidade.html">Privacidade</a>
+      <span class="sep-rodape">•</span>
+      <span class="versao" id="versao-app"></span>
+    </div>
+
+    <input type="file" id="input-importar" accept=".fractal,.json,application/json" hidden>
+  </section>
+
+  <!-- ============ TELA: FLOR (FRACTAL) ============ -->
+  <section id="tela-flor" class="tela">
+    <header class="topbar">
+      <button class="btn-icon" id="btn-voltar" title="Voltar" aria-label="Voltar">&#8592;</button>
+      <div class="breadcrumb" id="caminho"></div>
+      <div class="acoes-topo">
+        <button class="btn btn-pequeno btn-secundario" id="btn-anexos">Anexos</button>
+        <button class="btn btn-pequeno btn-secundario" id="btn-exportar">Exportar</button>
+        <button class="btn-icon" id="btn-guardar" title="Guardar" aria-label="Guardar">&#10003;</button>
+      </div>
+    </header>
+    <div class="flor-canvas" id="flor-canvas">
+      <div id="flor-viewport">
+        <div id="flor-area"></div>
+      </div>
+    </div>
+    <div id="meta-controle" class="meta-controle" hidden>
+      <button id="meta-menos" class="meta-btn meta-btn-desfazer" aria-label="Desfazer o último dia registrado" title="Desfazer o último dia registrado">↶</button>
+      <button id="meta-progresso" class="meta-progresso" title="Editar meta" aria-label="Editar meta">
+        <span id="meta-progresso-valor">0%</span>
+        <small id="meta-progresso-fracao">0/30 dias</small>
+        <small id="meta-progresso-prazo">Prazo: --/--/----</small>
+      </button>
+      <button id="meta-mais" class="meta-btn" aria-label="Registrar um dia" title="Registrar um dia">+1</button>
+      <button id="meta-concluir" class="meta-btn meta-concluir" aria-label="Concluir meta" title="Concluir meta">✓</button>
+    </div>
+    <button class="fab" id="btn-novo-item" aria-label="Novo item">+</button>
+  </section>
+
+  <!-- ============ TELA: FLUXOGRAMA ============ -->
+  <section id="tela-fluxo" class="tela">
+    <header class="topbar">
+      <button class="btn-icon" id="fluxo-voltar" title="Voltar" aria-label="Voltar">&#8592;</button>
+      <div class="breadcrumb" id="fluxo-titulo"></div>
+      <div class="acoes-topo">
+        <button class="btn-icon" id="fluxo-desfazer" title="Desfazer" aria-label="Desfazer" disabled>&#8630;</button>
+        <button class="btn-icon" id="fluxo-refazer" title="Refazer" aria-label="Refazer" disabled>&#8631;</button>
+        <button class="btn-icon" id="fluxo-mais" title="Mais opções" aria-label="Mais opções">&#8943;</button>
+      </div>
+    </header>
+    <div class="fluxo-canvas" id="fluxo-canvas">
+      <svg id="fluxo-svg" xmlns="http://www.w3.org/2000/svg" aria-label="Fluxograma"></svg>
+      <p class="fluxo-aviso" id="fluxo-aviso" hidden></p>
+    </div>
+    <button class="fab" id="fluxo-novo" aria-label="Adicionar bloco depois do destacado">+</button>
+  </section>
+
+  <!-- ============ TELA: ANEXOS ============ -->
+  <section id="tela-anexos" class="tela">
+    <header class="topbar">
+      <button class="btn-icon" id="btn-anexos-voltar" title="Voltar" aria-label="Voltar">&#8592;</button>
+      <div class="breadcrumb" id="anexos-titulo"></div>
+      <span></span>
+    </header>
+
+    <div class="barra-anexos">
+      <button class="add-anexo tipo-imagem" data-anexo-tipo="imagem" type="button">
+        <span class="add-icone" data-icone="imagem" aria-hidden="true"></span>
+        <span class="add-texto">Imagem</span>
+      </button>
+      <button class="add-anexo tipo-video" data-anexo-tipo="video" type="button">
+        <span class="add-icone" data-icone="video" aria-hidden="true"></span>
+        <span class="add-texto">Vídeo</span>
+      </button>
+      <button class="add-anexo tipo-link" data-anexo-tipo="link" type="button">
+        <span class="add-icone" data-icone="link" aria-hidden="true"></span>
+        <span class="add-texto">Link</span>
+      </button>
+      <button class="add-anexo tipo-arquivo" data-anexo-tipo="arquivo" type="button">
+        <span class="add-icone" data-icone="arquivo" aria-hidden="true"></span>
+        <span class="add-texto">Arquivo</span>
+      </button>
+    </div>
+
+    <div id="anexos-container" class="anexos-container">
+      <div id="anexos-vazio" class="vazio vazio-anexos">
+        <span class="vazio-icone" data-icone="imagem" aria-hidden="true"></span>
+        <p class="vazio-titulo">Nenhum anexo ainda</p>
+        <p class="vazio-sub">Adicione imagens, vídeos, links ou arquivos a este item.</p>
+      </div>
+    </div>
+
+    <input type="file" id="input-arquivo" hidden>
+  </section>
+
+  <!-- ============ TELA: CONTA / SINCRONIZAÇÃO ============ -->
+  <section id="tela-conta" class="tela">
+    <header class="topbar">
+      <button class="btn-icon" id="conta-voltar" title="Voltar" aria-label="Voltar">&#8592;</button>
+      <div class="breadcrumb">Conta e sincronização</div>
+      <span></span>
+    </header>
+
+    <div class="conta-conteudo">
+      <div class="conta-cartao">
+        <div class="conta-linha">
+          <span class="conta-rotulo">Estado</span>
+          <span class="conta-status" id="conta-status" data-situacao="local">Só neste aparelho</span>
+        </div>
+        <p class="conta-mensagem" id="conta-mensagem"></p>
+        <p class="conta-ultima" id="conta-escopos"></p>
+        <p class="conta-ultima" id="conta-ultima"></p>
+        <p class="conta-ultima" id="conta-armazenamento"></p>
+        <div class="conta-avisos" id="conta-avisos"></div>
+        <p class="conta-email" id="conta-email"></p>
+      </div>
+
+      <div class="conta-cartao" id="conta-deslogado">
+        <h2 class="conta-titulo">Entrar com o Google</h2>
+        <p class="conta-texto">
+          Entre para levar seus projetos para o Google Drive e usá-los no
+          celular, no tablet e no computador. Sem conta, o Fractal continua
+          funcionando normalmente só neste aparelho.
+        </p>
+        <p class="conta-texto conta-permissoes">
+          Ao entrar, o Google vai pedir sua autorização para o Fractal ver o
+          seu <b>nome e e-mail</b> (só para mostrar a conta conectada) e
+          acessar <b>apenas os arquivos que o próprio Fractal cria</b> no seu
+          Drive. O app não vê nem altera seus outros arquivos.
+          <a href="privacidade.html">Política de Privacidade</a>
+        </p>
+        <div id="conta-google" class="conta-google"></div>
+        <button class="btn btn-primario" id="btn-entrar-nativo" hidden>Entrar com o Google</button>
+      </div>
+
+      <div class="conta-cartao" id="conta-logado" hidden>
+        <h2 class="conta-titulo">Sincronização</h2>
+        <p class="conta-texto">
+          Os projetos ficam no Drive, na pasta oculta do app, e os anexos
+          (imagens, vídeos, arquivos) vão para a pasta <b>Fractal</b>,
+          que você pode abrir e baixar pelo Drive do computador ou do celular.
+          Cada anexo é enviado uma única vez.
+        </p>
+        <div class="conta-botoes">
+          <button class="btn btn-primario" id="btn-sincronizar">Sincronizar agora</button>
+          <button class="btn btn-secundario" id="btn-autorizar-drive" hidden>Autorizar o Drive</button>
+          <button class="btn btn-secundario" id="btn-sair">Sair da conta</button>
+        </div>
+      </div>
+
+      <div class="conta-cartao" id="conta-computador" hidden>
+        <h2 class="conta-titulo">Usar no computador</h2>
+        <p class="conta-texto">
+          Abra no navegador do computador e entre com esta mesma conta Google:
+          seus projetos aparecem lá, sincronizados pelo Drive.
+        </p>
+        <p class="conta-texto"><a id="conta-computador-link" class="conta-link" href="#"></a></p>
+      </div>
+
+      <div class="conta-cartao" id="conta-dados">
+        <h2 class="conta-titulo">Seus dados</h2>
+        <p class="conta-texto">
+          O Fractal não envia seus dados para o desenvolvedor: tudo fica no
+          seu Google Drive e neste aparelho. Você pode apagar tudo a
+          qualquer momento — os projetos, os anexos, a pasta
+          <b>Fractal</b> no Drive e a sua sessão. Para apagar também o que
+          está no Drive, entre com o Google antes.
+        </p>
+        <div class="conta-botoes">
+          <button class="btn btn-perigo" id="btn-apagar-dados">Apagar meus dados</button>
+        </div>
+      </div>
+
+      <!-- Só no app Android: o navegador não agenda notificações. -->
+      <div class="conta-cartao" id="conta-lembrete" hidden>
+        <h2 class="conta-titulo">Lembrete das metas</h2>
+        <p class="conta-texto">
+          Uma notificação por dia para registrar o progresso das suas metas.
+          Ela só aparece se houver meta em andamento e se você ainda não
+          registrou nada no dia. É gerada no próprio aparelho: nada é enviado
+          para fora.
+        </p>
+        <div class="lembrete-linha">
+          <label class="lembrete-chave">
+            <input type="checkbox" id="lembrete-ativo">
+            <span>Lembrar todo dia às</span>
+          </label>
+          <input class="campo lembrete-hora" type="time" id="lembrete-hora" value="20:00">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TUTORIAL (primeira abertura) ============ -->
+  <div class="tutorial-overlay" id="tutorial-overlay" hidden>
+    <div class="tutorial" role="dialog" aria-modal="true" aria-labelledby="tutorial-titulo">
+      <div class="tutorial-figura" id="tutorial-figura" aria-hidden="true"></div>
+      <h2 class="tutorial-titulo" id="tutorial-titulo"></h2>
+      <p class="tutorial-texto" id="tutorial-texto"></p>
+      <div class="tutorial-pontos" id="tutorial-pontos" aria-hidden="true"></div>
+      <div class="tutorial-acoes" id="tutorial-acoes"></div>
+    </div>
+  </div>
+
+  <!-- ============ MODAIS ============ -->
+  <div class="modal-overlay" id="modal-overlay" hidden>
+    <div class="modal">
+      <h2 id="modal-titulo"></h2>
+      <div class="modal-corpo" id="modal-corpo"></div>
+      <div class="modal-acoes">
+        <button class="btn btn-secundario" id="modal-cancelar">Cancelar</button>
+        <button class="btn btn-primario" id="modal-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="sheet-overlay" hidden>
+    <div class="sheet">
+      <h2 id="sheet-titulo"></h2>
+      <div id="sheet-opcoes" class="sheet-opcoes"></div>
+      <button class="btn btn-texto" id="sheet-fechar">Fechar</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <div id="erro-tela" class="erro-tela" hidden></div>
+
+  <!-- Recebe o resultado do login Google vindo do app nativo (Android).
+       Fica antes de todos os scripts para existir mesmo se o redirect
+       chegar enquanto a pagina ainda esta carregando. -->
+  <script>
+    window.__fractalGoogleAuthFila = [];
+    window.__fractalGoogleAuthEntregar = function (payload) {
+      window.__fractalGoogleAuthFila.push(payload);
+      if (window.__fractalGoogleAuthProcessar) window.__fractalGoogleAuthProcessar(payload);
+      // Avisa o app nativo que o resultado chegou (ele nao reenvia).
+      try {
+        if (window.fractalBridge && window.fractalBridge.onGoogleAuthRecebido) {
+          window.fractalBridge.onGoogleAuthRecebido();
+        }
+      } catch (e) { }
+    };
+  </script>
+
+  <script src="js/versao.js?v=21"></script>
+  <script src="js/storage.js?v=21"></script>
+  <script src="js/app.js?v=21"></script>
+  <script src="js/config.js?v=21"></script>
+  <script src="js/google-auth.js?v=21"></script>
+  <script src="js/drive-sync.js?v=21"></script>
+  <script src="js/sync.js?v=21"></script>
+  <script src="js/conta.js?v=21"></script>
+  <script src="js/tutorial.js?v=21"></script>
+  <script src="js/lembrete.js?v=21"></script>
+  <script src="js/fluxo.js?v=21"></script>
+  <script src="js/portao.js?v=21"></script>
+</body>
+</html>

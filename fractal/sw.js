@@ -1,0 +1,109 @@
+'use strict';
+
+/* ============================================================
+ * Service worker do Fractal.
+ * Uso relativo para funcionar do GitHub Pages (subpasta).
+ *
+ * Estratégia:
+ *  - navegação e JS/CSS: NETWORK-FIRST (sempre busca versão nova,
+ *    cai para o cache se estiver offline) => atualizações entram
+ *    logo e um cache corrompido se auto-repara;
+ *  - demais ativos (ícones, manifest): cache-first + revalidação
+ *    em segundo plano.
+ * ============================================================ */
+
+const CACHE = 'fractal-v21';
+
+const CORE = [
+  './',
+  './?v=21',
+  './index.html',
+  './manifest.json?v=21',
+  './css/styles.css?v=21',
+  './js/versao.js?v=21',
+  './js/storage.js?v=21',
+  './js/app.js?v=21',
+  './js/config.js?v=21',
+  './js/google-auth.js?v=21',
+  './js/drive-sync.js?v=21',
+  './js/sync.js?v=21',
+  './js/conta.js?v=21',
+  './js/tutorial.js?v=21',
+  './js/lembrete.js?v=21',
+  './js/fluxo.js?v=21',
+  './js/portao.js?v=21',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png',
+  './icons/favicon.svg',
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache => cache.addAll(CORE))
+      .then(() => self.skipWaiting())
+  );
+});
+
+async function ativarServiceWorker() {
+  const keys = await caches.keys();
+  const haviaVersaoAnterior = keys.some(k => k.startsWith('fractal-') && k !== CACHE);
+  await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+  await self.clients.claim();
+
+  if (haviaVersaoAnterior) {
+    const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    await Promise.all(clientes.map(cliente =>
+      cliente.navigate(cliente.url).catch(() => {})
+    ));
+  }
+}
+
+self.addEventListener('activate', event => {
+  event.waitUntil(ativarServiceWorker());
+});
+
+function atualizarCache(req, res) {
+  const copia = res.clone();
+  caches.open(CACHE).then(c => c.put(req, copia));
+}
+
+async function redePrimeiro(req) {
+  try {
+    const res = await fetch(req);
+    if (res && res.ok) atualizarCache(req, res);
+    return res;
+  } catch (err) {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+    if (req.mode === 'navigate') {
+      const index = await caches.match('./index.html');
+      if (index) return index;
+    }
+    throw err;
+  }
+}
+
+async function cachePrimeiro(req) {
+  const cached = await caches.match(req);
+  if (cached) return cached;
+  const res = await fetch(req);
+  if (res && res.ok) atualizarCache(req, res);
+  return res;
+}
+
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  if (url.origin !== location.origin) return;
+
+  const ehCodigo = url.pathname.endsWith('.js') || url.pathname.endsWith('.css');
+
+  event.respondWith(
+    (req.mode === 'navigate' || ehCodigo) ? redePrimeiro(req) : cachePrimeiro(req)
+  );
+});
