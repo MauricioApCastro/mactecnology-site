@@ -56,6 +56,13 @@
   .apps{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:28px;color:var(--muted)}
   .apps strong{color:var(--text)}
 
+  .app-destaque{display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px;margin-bottom:20px}
+  .app-destaque > img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:14px;border:1px solid var(--line)}
+  .app-destaque p{color:var(--muted)}
+  .app-nome{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .app-nome img{width:44px;height:44px;border-radius:10px}
+  .app-nome h3{font-size:1.5rem}
+
   .about{display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:start}
   .about p{color:var(--muted);margin-bottom:14px}
   .facts{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px}
@@ -71,6 +78,8 @@
     nav a:not(:last-child){display:none}
     .about{grid-template-columns:1fr}
     .hero{padding:64px 0 48px}
+    .app-destaque{grid-template-columns:1fr}
+    .app-destaque > img{max-width:220px}
   }
 </style>
 </head>
@@ -148,17 +157,21 @@
   <section id="apps">
     <div class="wrap">
       <h2>Aplicativos Android</h2>
-      <p class="sub">Nossos aplicativos publicados no Google Play aparecerão aqui.</p>
-      <div class="grid" style="margin-bottom:20px">
-        <article class="card">
-          <h3>Fractal</h3>
-          <p>Organize projetos, tarefas, notas e ideias em fractais visuais: um centro rodeado de círculos, cada um com o seu interior. Tem metas, compromissos com lembrete, fluxogramas, anexos e sincronização opcional pelo seu próprio Google Drive, com versão para usar no computador.</p>
-          <div class="tags"><span class="tag">Android</span><span class="tag">.NET MAUI</span><span class="tag">Google Drive</span></div>
-          <a class="more" href="fractal/privacidade.html">Política de Privacidade do Fractal →</a>
-        </article>
-      </div>
+      <p class="sub">Nossos aplicativos publicados no Google Play.</p>
+      <article class="app-destaque">
+        <img src="app-fractal/img/01-flor.webp" alt="Tela do Fractal com um projeto organizado em círculos" loading="lazy">
+        <div>
+          <div class="app-nome"><img src="app-fractal/img/icone.png" alt=""><h3>Fractal</h3></div>
+          <p>Organize projetos, tarefas, notas e ideias em fractais visuais: um centro rodeado de círculos, cada um com o seu interior. Tem metas, compromissos com lembrete, checklists, fluxogramas, anexos e sincronização opcional pelo seu próprio Google Drive, com versão para usar no computador.</p>
+          <div class="tags"><span class="tag">Android</span><span class="tag">.NET MAUI</span><span class="tag">Google Drive</span><span class="tag">Grátis</span></div>
+          <div class="cta" style="margin-top:8px">
+            <a class="btn primary" href="https://play.google.com/store/apps/details?id=com.mactecnology.fractal" target="_blank" rel="noopener">Baixar no Google Play</a>
+            <a class="btn" href="app-fractal/">Conhecer o Fractal</a>
+          </div>
+        </div>
+      </article>
       <div class="apps">
-        <strong>Em breve no Google Play.</strong> Os aplicativos da MAC Tecnology seguem a nossa
+        <strong>Disponível no Google Play.</strong> Os aplicativos da MAC Tecnology seguem a nossa
         <a href="privacidade.html">Política de Privacidade</a> e os <a href="termos.html">Termos de Uso</a>. Dúvidas ou suporte:
         <a href="mailto:contato@mactecnology.com.br">contato@mactecnology.com.br</a>.
       </div>
